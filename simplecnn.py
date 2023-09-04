@@ -49,3 +49,4 @@ class SimpleCNN(nn.Module):
         x = self.fc3(x)
 
         return x
+    
