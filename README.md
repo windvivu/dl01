@@ -1,1 +1,1 @@
-# for practsine deeplearning
+# for practicing deeplearning
