@@ -1,7 +1,18 @@
 #%%
+from torchvision import datasets as dset
+from torchvision.transforms import ToTensor
+namedata = "animal10"
+trainset = dset.CIFAR10(root='data', train=True, download=True, transform=ToTensor())
+testset = dset.CIFAR10(root='data', train=False, download=True, transform=ToTensor())
+
+sizex = trainset[0][0].shape[2]
+#%%
+batch_size = 32
+num_epochs = 100
+
+#%%
 import os
 import shutil
-from animaldata import Animal10data
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from sklearn.metrics import classification_report
@@ -9,16 +20,13 @@ from tqdm import tqdm
 from simplecnn import SimpleCNN
 import torch
 
-
-trainset = Animal10data(root='data/animalsv2', train=True)
-testset = Animal10data(root='data/animalsv2', train=False)
 bestaccu = 0
 
 # save model
-def savecheckpoint(model, filename):
+def savecheckpoint(model, filename, epoch):
     checkpoint = {
       "model": model,
-      "categories": testset.categories
+      "epoch": epoch
     }
     torch.save(checkpoint, filename)
 #%%
@@ -38,16 +46,13 @@ if os.path.exists(logpath):
 writer = SummaryWriter(logpath)
 # %%
 
-batch_size = 16
-num_epochs = 20
-
 train_dataloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=0, drop_last=False)
 test_dataloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=0, drop_last=False)
 
 total_batch = len(train_dataloader)
 total_batch_test = len(test_dataloader)
 # %%
-model = SimpleCNN().to(device)
+model = SimpleCNN(size=sizex).to(device)
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
@@ -88,10 +93,10 @@ for epoch in range(num_epochs):
         writer.add_scalar("Accuracy/test", accu, epoch+1)
         if accu > bestaccu:
             bestaccu = accu
-            savecheckpoint(model, os.path.join(savepath, "bestcheckpoint.pt"))
+            savecheckpoint(model, os.path.join(savepath, namedata + "_bestcheckpoint.pt"),epoch+1)
             with open(os.path.join(savepath, "bestmodel.txt"), "w") as f:
                 f.write(str(bestaccu))
-        savecheckpoint(model, os.path.join(savepath, "lastcheckpoint.pt"))
+        savecheckpoint(model, os.path.join(savepath, namedata + "lastcheckpoint.pt"),epoch+1)
         with open(os.path.join(savepath, "lastmodel.txt"), "w") as f:
             f.write(str(accu))
 

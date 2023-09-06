@@ -1,3 +1,4 @@
+#%%
 import os
 from PIL import Image
 from torch.utils.data import Dataset
@@ -47,3 +48,8 @@ class Animal10data(Dataset):
     def getitem_path(self, index):
         path, label = self.img_paths[index]
         return path , label
+
+if __name__ == "__main__":
+    trainset = Animal10data(root='data/animalsv2', train=True)
+    testset = Animal10data(root='data/animalsv2', train=False)
+# %%

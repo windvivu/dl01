@@ -1,4 +1,7 @@
 data/*
+!data/txt.txt
 model/
 trainlogging/
 __pycache__/
+_env/
+img/

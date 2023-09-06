@@ -1,10 +1,12 @@
 #%%
-from animaldata import Animal10data
-from torch.utils.data import DataLoader
-
-train_data = Animal10data(root='data/animalsv2', train=True)
-test_data = Animal10data(root='data/animalsv2', train=False)
-
+from torchvision import datasets, transforms
 #%%
-print(train_data.getitem_path(0))
+trainset = datasets.CelebA(root='./data', split='train', download=True)
+# %%
+a,b = trainset[0]
+# %%
+from animaldata import Animal10data
+# %%
+trainset = Animal10data(root='./data/animalsv2', train=True)
+
 # %%
