@@ -1,12 +1,7 @@
 #%%
-from torchvision import datasets, transforms
+from torchvision import datasets as dset
 #%%
-trainset = datasets.CelebA(root='./data', split='train', download=True)
-# %%
-a,b = trainset[0]
-# %%
-from animaldata import Animal10data
-# %%
-trainset = Animal10data(root='./data/animalsv2', train=True)
+trainset = dset.CIFAR100(root='./data', train=True, download=True)
+
 
 # %%

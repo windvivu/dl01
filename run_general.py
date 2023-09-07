@@ -1,9 +1,10 @@
 #%%
 from torchvision import datasets as dset
 from torchvision.transforms import ToTensor
-namedata = "animal10"
-trainset = dset.CIFAR10(root='data', train=True, download=True, transform=ToTensor())
-testset = dset.CIFAR10(root='data', train=False, download=True, transform=ToTensor())
+namedata = "cifa100"
+num_class = 100
+trainset = dset.CIFAR100(root='data', train=True, download=True, transform=ToTensor())
+testset = dset.CIFAR100(root='data', train=False, download=True, transform=ToTensor())
 
 sizex = trainset[0][0].shape[2]
 #%%
@@ -52,7 +53,7 @@ test_dataloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_
 total_batch = len(train_dataloader)
 total_batch_test = len(test_dataloader)
 # %%
-model = SimpleCNN(size=sizex).to(device)
+model = SimpleCNN(size=sizex,num_classes=num_class).to(device)
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
@@ -94,10 +95,10 @@ for epoch in range(num_epochs):
         if accu > bestaccu:
             bestaccu = accu
             savecheckpoint(model, os.path.join(savepath, namedata + "_bestcheckpoint.pt"),epoch+1)
-            with open(os.path.join(savepath, "bestmodel.txt"), "w") as f:
+            with open(os.path.join(savepath, namedata + "_bestmodel.txt"), "w") as f:
                 f.write(str(bestaccu))
-        savecheckpoint(model, os.path.join(savepath, namedata + "lastcheckpoint.pt"),epoch+1)
-        with open(os.path.join(savepath, "lastmodel.txt"), "w") as f:
+        savecheckpoint(model, os.path.join(savepath, namedata + "_lastcheckpoint.pt"),epoch+1)
+        with open(os.path.join(savepath, namedata + "_lastmodel.txt"), "w") as f:
             f.write(str(accu))
 
 all_labels_ = [i.item() for i in all_labels]
