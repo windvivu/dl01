@@ -9,7 +9,7 @@ testset = dset.CIFAR100(root='data', train=False, download=True, transform=ToTen
 sizex = trainset[0][0].shape[2]
 #%%
 batch_size = 32
-num_epochs = 100
+num_epochs = 10000
 
 #%%
 import os
@@ -19,15 +19,16 @@ from torch.utils.tensorboard import SummaryWriter
 from sklearn.metrics import classification_report
 from tqdm import tqdm
 from simplecnn import SimpleCNN
+# from lenet import LeNet
 import torch
 
-bestaccu = 0
-
 # save model
-def savecheckpoint(model, filename, epoch):
+def savecheckpoint(model, filename, epoch, accu, optimizer=None):
     checkpoint = {
       "model": model,
-      "epoch": epoch
+      "epoch": epoch,
+      "accu": accu,
+      "optimizer": None if optimizer == None else optimizer.state_dict()
     }
     torch.save(checkpoint, filename)
 #%%
@@ -44,6 +45,15 @@ if not os.path.exists(savepath):
 if os.path.exists(logpath):
     shutil.rmtree(logpath)
 
+if os.path.exists(os.path.join(savepath, namedata + "_bestcheckpoint.pt")) and os.path.exists(os.path.join(savepath, namedata + "_bestcheckpoint_accu.txt")):
+    with open(os.path.join(savepath, namedata + "_bestcheckpoint_accu.txt"), "r") as f:
+        try:
+            bestaccu = float(f.readline())
+        except:
+            bestaccu = 0
+else:
+    bestaccu = 0
+
 writer = SummaryWriter(logpath)
 # %%
 
@@ -53,11 +63,26 @@ test_dataloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_
 total_batch = len(train_dataloader)
 total_batch_test = len(test_dataloader)
 # %%
-model = SimpleCNN(size=sizex,num_classes=num_class).to(device)
-criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+if os.path.exists(os.path.join(savepath, namedata + "_lastcheckpoint.pt")):
+    checkpoint = torch.load(os.path.join(savepath, namedata + "_lastcheckpoint.pt"))
+    model = checkpoint["model"]
+    model.to(device)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    optimizer.load_state_dict(checkpoint["optimizer"])
+    start_epoch = checkpoint["epoch"]
+    print("Load last checkpoint success!")
+    if start_epoch >= num_epochs:
+        print("Training completed!")
+        exit()
+else:
+    start_epoch = 1
+    model = SimpleCNN(size=sizex,num_classes=num_class).to(device)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
-for epoch in range(num_epochs):
+start_epoch -=1
+criterion = torch.nn.CrossEntropyLoss()
+
+for epoch in range(start_epoch, num_epochs):
         print("Epoch: ", str(epoch+1), "/", str(num_epochs))
         model.train()
         progress_bar = tqdm(train_dataloader, desc=" Training", colour="green")
@@ -94,11 +119,11 @@ for epoch in range(num_epochs):
         writer.add_scalar("Accuracy/test", accu, epoch+1)
         if accu > bestaccu:
             bestaccu = accu
-            savecheckpoint(model, os.path.join(savepath, namedata + "_bestcheckpoint.pt"),epoch+1)
-            with open(os.path.join(savepath, namedata + "_bestmodel.txt"), "w") as f:
+            savecheckpoint(model, os.path.join(savepath, namedata + "_bestcheckpoint.pt"),epoch+1,accu)
+            with open(os.path.join(savepath, namedata + "_bestcheckpoint_accu.txt"), "w") as f:
                 f.write(str(bestaccu))
-        savecheckpoint(model, os.path.join(savepath, namedata + "_lastcheckpoint.pt"),epoch+1)
-        with open(os.path.join(savepath, namedata + "_lastmodel.txt"), "w") as f:
+        savecheckpoint(model, os.path.join(savepath, namedata + "_lastcheckpoint.pt"),epoch+1,accu,optimizer)
+        with open(os.path.join(savepath, namedata + "_lastcheckpoint_accu.txt"), "w") as f:
             f.write(str(accu))
 
 all_labels_ = [i.item() for i in all_labels]
