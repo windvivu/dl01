@@ -1,14 +1,15 @@
 #%%
 from torchvision import datasets as dset
-from torchvision.transforms import ToTensor, Resize, Compose
+from torchvision.transforms import ToTensor, Resize, Compose, Normalize
 from torchvision.models import alexnet
+from torch import nn
 
-namedata = "alexnet_cifa10"
-num_class = 10
+namedata = "alexnet_cifa100"
+num_class = 100
 
-transform = Compose([Resize((256, 256)), ToTensor()])
-trainset = dset.CIFAR10(root='data', train=True, download=True, transform=transform)
-testset = dset.CIFAR10(root='data', train=False, download=True, transform=transform)
+transform = Compose([Resize((256, 256)), ToTensor(),Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+trainset = dset.CIFAR100(root='data', train=True, download=True, transform=transform)
+testset = dset.CIFAR100(root='data', train=False, download=True, transform=transform)
 
 #%%
 batch_size = 32
@@ -79,7 +80,8 @@ if os.path.exists(os.path.join(savepath, namedata + "_lastcheckpoint.pt")):
         exit()
 else:
     start_epoch = 1
-    model = alexnet(pretrained=False, num_classes=num_class).to(device)
+    model = alexnet(pretrained=True).to(device)
+    model.classifier[6] = nn.Linear(4096, num_class).to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
 start_epoch -=1
