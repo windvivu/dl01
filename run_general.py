@@ -1,12 +1,11 @@
 #%%
 from torchvision import datasets as dset
 from torchvision.transforms import ToTensor
-namedata = "cifa100"
-num_class = 100
-trainset = dset.CIFAR100(root='data', train=True, download=True, transform=ToTensor())
-testset = dset.CIFAR100(root='data', train=False, download=True, transform=ToTensor())
+namedata = "cifa10"
+num_class = 10
+trainset = dset.CIFAR10(root='data', train=True, download=True, transform=ToTensor())
+testset = dset.CIFAR10(root='data', train=False, download=True, transform=ToTensor())
 
-sizex = trainset[0][0].shape[2]
 #%%
 batch_size = 32
 num_epochs = 10000
@@ -76,7 +75,7 @@ if os.path.exists(os.path.join(savepath, namedata + "_lastcheckpoint.pt")):
         exit()
 else:
     start_epoch = 1
-    model = SimpleCNN(size=sizex,num_classes=num_class).to(device)
+    model = SimpleCNN(num_classes=num_class).to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
 start_epoch -=1
